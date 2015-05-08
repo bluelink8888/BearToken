@@ -1,0 +1,103 @@
+﻿<div class="jumbotron">
+    <h1>ASP.NET</h1>
+    <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS, and JavaScript.</p>
+    <p><a href="http://asp.net" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <h2>Register Here</h2>
+        <p><span>帳號  :  </span><input type="text" name="Account" id="Register_Account"/></p>
+        <p><span>密碼  :  </span><input type="text" name="Password" id="Register_Password"/></p>
+        <p><span>確認密碼 : </span><input type="text" name="PasswordConfirm" id="PasswordConfirm"/></p>
+        <button id="register_button">註冊</button>
+    </div>
+    <div class="col-md-4">
+        <h2>Get Refresh Token</h2>
+        <p><span>帳號 : </span><input type="text" name="Account" id="Token_Account"/></p>
+        <p><span>帳號 : </span><input type="text" name="Password" id="Token_Password" /></p>
+        <button id="refresh_Token">Token Get</button>
+        <button id="access_Token">Access Token</button>
+    </div>
+    <div class="col-md-4">
+        <h2>Use Token Call Api</h2>
+        <p><span>帳號 : </span><input type="text" name="Account" id="Result_Account" /></p>
+        <p><span>結果 : </span><input type="text" name="Result" id="Api_Result" /></p>
+        <button id="CallApi">Call API</button>
+    </div>
+</div>
+@section Scripts {
+    @Scripts.Render("~/bundles/app")
+}
+<script src="~/Scripts/jquery-1.10.2.min.js"></script>
+<script>
+   $('#register_button').on('click', function () {
+       var account = $('#Register_Account').val();
+       var password = $('#Register_Password').val();
+       var passowrd_confirm = $('#PasswordConfirm').val();
+       console.log(account + password + passowrd_confirm);
+       $.ajax({
+           type: "POST",
+           url: '/api/account/register',
+           contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+           data: { "Email": account, "Password": password, "ConfirmPassword": passowrd_confirm }
+       }).success(function () {
+           alert("註冊成功")
+           $('#Token_Account').val(account);
+           $('#Token_Password').val(password);
+       })
+   })
+
+   $('#refresh_Token').on('click', function () {
+       var account = $('#Token_Account').val();
+       var password = $('#Token_Password').val();
+       console.log(account + password);
+
+       $.ajax({
+           type: "POST",
+           url: '/token',
+           ContentType: "application/x-www-form-urlencoded; charset=UTF-8",
+           data:{"grant_type":"password","username":account,"password":password},
+       }).success(function (data) {
+           console.log(data.access_token);
+           sessionStorage.setItem('refresh_token',data.refresh_token)
+           
+       })
+   })
+   $('#access_Token').on('click', function () {
+       $.ajax({
+           type: "POST",
+           url:"/token",
+           ContentType: "application/x-www-form-urlencoded; charset=UTF-8",
+           data:{"grant_type":"refresh_token","refresh_token": sessionStorage.getItem('refresh_token')}
+       }).success(function (data) {
+           
+           sessionStorage.setItem('AccesssTokenKey', data.access_token);
+           console.log(data.access_token);
+
+       })
+
+
+   })
+
+   $('#CallApi').on('click', function () {
+
+       var access_token = sessionStorage.getItem('AccessTokenKey');
+       var headers = {};
+       if (access_token) {
+           headers.Authorization = 'Bearer ' + token;
+       }
+
+
+       $.ajax({
+           type: "GET",
+           url: "/api/values",
+           header:headers
+       }).success(function (data) {
+
+           $('#Api_Result').val(data);
+
+       })
+
+   })
+
+</script>
